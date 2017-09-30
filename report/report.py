@@ -15,15 +15,15 @@ def print_price():
 
     :return: None
     """
-    urlTicker = urllib.request.urlopen('https://api.bithumb.com/public/ticker/ALL')
-    readTicker = urlTicker.read()
-    jsonTicker = json.loads(readTicker)
+    url_ticker = urllib.request.urlopen('https://api.bithumb.com/public/ticker/ALL')
+    read_ticker = url_ticker.read()
+    json_ticker = json.loads(read_ticker)
 
-    BTC = jsonTicker['data']['BTC']['closing_price']
-    ETH = jsonTicker['data']['ETH']['closing_price']
-    XRP = jsonTicker['data']['XRP']['closing_price']
+    BTC = json_ticker['data']['BTC']['closing_price']
+    ETH = json_ticker['data']['ETH']['closing_price']
+    XRP = json_ticker['data']['XRP']['closing_price']
 
-    status = "OK" if jsonTicker['status'] == "0000" else "ERROR"
+    status = "OK" if json_ticker['status'] == "0000" else "ERROR"
 
     print("Time  : " + str(datetime.datetime.now()))
     print("Status: " + status)
