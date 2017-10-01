@@ -7,6 +7,7 @@ Author: Jihoon Kim
 import json
 import datetime
 import urllib.request
+from config import api_url
 
 
 def print_price():
@@ -15,7 +16,7 @@ def print_price():
 
     :return: None
     """
-    url_ticker = urllib.request.urlopen('https://api.bithumb.com/public/ticker/ALL')
+    url_ticker = urllib.request.urlopen(api_url + '/public/ticker/ALL')
     read_ticker = url_ticker.read()
     json_ticker = json.loads(read_ticker)
 
