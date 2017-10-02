@@ -24,13 +24,14 @@ def print_price(currency='ALL'):
     json_ticker = json.loads(read_ticker)
     status = "OK" if json_ticker['status'] == "0000" else "ERROR"
 
+    print("Time  : " + str(datetime.datetime.now().strftime("%Y-%m-%d %H:%M:%S")))
+    print("Status: " + status)
+
     if currency == 'ALL':
         BTC = json_ticker['data']['BTC']['closing_price']
         ETH = json_ticker['data']['ETH']['closing_price']
         XRP = json_ticker['data']['XRP']['closing_price']
 
-        print("Time  : " + str(datetime.datetime.now()))
-        print("Status: " + status)
         print("BTC   : " + BTC)
         print("ETH   : " + ETH)
         print("XRP   : " + XRP)
@@ -38,8 +39,6 @@ def print_price(currency='ALL'):
     else:
         CUR = json_ticker['data']['closing_price']
 
-        print("Time  : " + str(datetime.datetime.now()))
-        print("Status: " + status)
         print("{0:6s}: ".format(currency) + CUR)
 
     return None
