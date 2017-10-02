@@ -10,26 +10,36 @@ import urllib.request
 from config import api_url
 
 
-def print_price():
+def print_price(currency='ALL'):
     """
     Prints price of cryptocurrencies.
-
+    
+    :param currency: The type of currency
+    :type currency: string or None
     :return: None
+    :rtype: None
     """
-    url_ticker = urllib.request.urlopen(api_url + '/public/ticker/ALL')
+    url_ticker = urllib.request.urlopen(api_url + '/public/ticker/' + currency)
     read_ticker = url_ticker.read()
     json_ticker = json.loads(read_ticker)
-
-    BTC = json_ticker['data']['BTC']['closing_price']
-    ETH = json_ticker['data']['ETH']['closing_price']
-    XRP = json_ticker['data']['XRP']['closing_price']
-
     status = "OK" if json_ticker['status'] == "0000" else "ERROR"
 
-    print("Time  : " + str(datetime.datetime.now()))
-    print("Status: " + status)
-    print("BTC   : " + BTC)
-    print("ETH   : " + ETH)
-    print("XRP   : " + XRP)
+    if currency == 'ALL':
+        BTC = json_ticker['data']['BTC']['closing_price']
+        ETH = json_ticker['data']['ETH']['closing_price']
+        XRP = json_ticker['data']['XRP']['closing_price']
+
+        print("Time  : " + str(datetime.datetime.now()))
+        print("Status: " + status)
+        print("BTC   : " + BTC)
+        print("ETH   : " + ETH)
+        print("XRP   : " + XRP)
+
+    else:
+        CUR = json_ticker['data']['closing_price']
+
+        print("Time  : " + str(datetime.datetime.now()))
+        print("Status: " + status)
+        print("{0:6s}: ".format(currency) + CUR)
 
     return None
