@@ -4,14 +4,14 @@ Created on 10/3/17
 Author: Jihoon Kim
 """
 
-import urllib.request
-import json
 import datetime
+import json
+import urllib.request
 import pandas as pd
 
-from config import api_url
 from account_info import api_key, api_secret
-from xcoin_api_client import XCoinAPI
+from api.xcoin_api_client import XCoinAPI
+from config import api_url
 
 
 class Trader(XCoinAPI):
