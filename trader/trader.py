@@ -8,6 +8,7 @@ import datetime
 import json
 import urllib.request
 import pandas as pd
+import time
 
 from account_info import api_key, api_secret
 from api.xcoin_api_client import XCoinAPI
@@ -61,20 +62,19 @@ class Trader(XCoinAPI):
             status = "OK" if json_ticker['status'] == "0000" else "ERROR"
 
             time = str(datetime.datetime.now().strftime("%Y-%m-%d %H:%M:%S"))
-            CUR = json_ticker['data']['closing_price']
+            current_price = json_ticker['data']['closing_price']
 
             if report:
-                print("==========[Price Record]==========")
-                print("Time  : " + time)
+                print("=============[Price Record]=============")
                 print("Status: " + status)
-                print("{0:6s}: ".format(self.currency) + CUR)
-                print("==================================")
+                print("Time  : " + time)
+                print("{0:6s}: ".format(self.currency) + current_price)
 
             time = pd.to_datetime(time, format="%Y-%m-%d %H:%M:%S")
-            CUR = float(json_ticker['data']['closing_price'])
-            self.currency_current_value = CUR
+            current_price = float(json_ticker['data']['closing_price'])
+            self.currency_current_value = current_price
 
-            new_data = {'Time': time, 'Price': CUR}
+            new_data = {'Time': time, 'Price': current_price}
             self.table = self.table.append(new_data, ignore_index=True)
 
             return self.table
@@ -91,7 +91,7 @@ class Trader(XCoinAPI):
             self.available_krw = float(response_update_wallet["data"]["available_krw"])
 
             if report:
-                print("==========[Wallet Update]==========")
+                print("============[Wallet Update]============")
                 print("Status: " + status)
                 print("Available " + self.currency + ": " + str(response_update_wallet["data"]["available_" + self.currency.lower()]))
                 print("Available KRW: " + str(response_update_wallet["data"]["available_krw"]))
@@ -108,7 +108,7 @@ class Trader(XCoinAPI):
                 units_buy = round(before_fee_unit - expected_fee, 4)
 
             else:
-                units_buy = round(units, 4)
+                units_buy = round(float(units), 4)
 
             rgParams = {
                 "currency": self.currency,
