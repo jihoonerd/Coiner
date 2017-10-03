@@ -5,6 +5,7 @@ Author: Jihoon Kim
 """
 
 from account_info import api_key, api_secret
+import pandas as pd
 
 
 class Trader(object):
@@ -14,3 +15,5 @@ class Trader(object):
         self.trade_algorithm = trade_algorithm
         self.api_key = api_key
         self.api_secret = api_secret
+        self.table = pd.DataFrame(columns={'Time', 'Price'})
+
