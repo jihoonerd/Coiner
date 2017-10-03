@@ -16,58 +16,119 @@ from config import api_url
 
 class Trader(XCoinAPI):
 
-    def __init__(self, currency='ETH', trade_algorithm=None):
+        def __init__(self, currency='ETH', trade_algorithm=None):
 
-        super(Trader, self).__init__(api_key=api_key, api_secret=api_secret)
-        self.currency = currency
-        self.trade_algorithm = trade_algorithm
-        self.table = pd.DataFrame(columns={'Time', 'Price'})
-        self.available_eth = 0
-        self.available_krw = 0
+            super(Trader, self).__init__(api_key=api_key, api_secret=api_secret)
+            self.currency = currency
+            self.trade_algorithm = trade_algorithm
+            self.table = pd.DataFrame(columns={'Time', 'Price'})
+            self.currency_current_value = None
+            self.available_eth = 0
+            self.available_krw = 0
+            self.trade_fee = 0
 
-    def recorder(self):
-        """
-        Records time and price of given currency in Pandas format.
+            self.set_trade_fee()
+            self.recorder()
+            self.update_wallet()
 
-        :return: DataFrame of time and price
-        :rtype: pd.DataFrame
-        """
+        def set_trade_fee(self):
 
-        url_ticker = urllib.request.urlopen(api_url + '/public/ticker/' + self.currency)
-        read_ticker = url_ticker.read()
-        json_ticker = json.loads(read_ticker)
-        status = "OK" if json_ticker['status'] == "0000" else "ERROR"
+            rgParams = {
+                "currency": self.currency
+            }
 
-        time = str(datetime.datetime.now().strftime("%Y-%m-%d %H:%M:%S"))
-        CUR = json_ticker['data']['closing_price']
-        print("==========[Price Record]==========")
-        print("Time  : " + time)
-        print("Status: " + status)
-        print("{0:6s}: ".format(self.currency) + CUR)
-        print("==================================")
+            response_fee = self.xcoinApiCall("/info/account", rgParams)
+            status = "OK" if response_fee["status"] == "0000" else "ERROR"
+            self.trade_fee = float(response_fee["data"]["trade_fee"])
 
-        time = pd.to_datetime(time, format="%Y-%m-%d %H:%M:%S")
-        CUR = float(json_ticker['data']['closing_price'])
+            print("==========[Register Trade Fee]==========")
+            print("Status   : " + status)
+            print("Trade Fee: " + str(response_fee["data"]["trade_fee"]))
 
-        new_data = {'Time': time, 'Price': CUR}
-        self.table = self.table.append(new_data, ignore_index=True)
+            return None
 
-        return self.table
+        def recorder(self, report=True):
+            """
+            Records time and price of given currency in Pandas format.
 
-    def update_wallet(self):
+            :return: DataFrame of time and price
+            :rtype: pd.DataFrame
+            """
 
-        rgParams = {
-            "currency": self.currency,
-        }
+            url_ticker = urllib.request.urlopen(api_url + '/public/ticker/' + self.currency)
+            read_ticker = url_ticker.read()
+            json_ticker = json.loads(read_ticker)
+            status = "OK" if json_ticker['status'] == "0000" else "ERROR"
 
-        response = self.xcoinApiCall("/info/balance", rgParams)
-        status = "OK" if response["status"] == "0000" else "ERROR"
-        self.available_eth = float(response["data"]["available_" + self.currency.lower()])
-        self.available_krw = float(response["data"]["available_krw"])
+            time = str(datetime.datetime.now().strftime("%Y-%m-%d %H:%M:%S"))
+            CUR = json_ticker['data']['closing_price']
 
-        print("==========[Wallet Update]==========")
-        print("Status: " + status)
-        print("Available " + self.currency + ": " + str(response["data"]["available_" + self.currency.lower()]))
-        print("Available KRW: " + str(response["data"]["available_krw"]))
+            if report:
+                print("==========[Price Record]==========")
+                print("Time  : " + time)
+                print("Status: " + status)
+                print("{0:6s}: ".format(self.currency) + CUR)
+                print("==================================")
 
-        return None
+            time = pd.to_datetime(time, format="%Y-%m-%d %H:%M:%S")
+            CUR = float(json_ticker['data']['closing_price'])
+            self.currency_current_value = CUR
+
+            new_data = {'Time': time, 'Price': CUR}
+            self.table = self.table.append(new_data, ignore_index=True)
+
+            return self.table
+
+        def update_wallet(self, report=True):
+
+            rgParams = {
+                "currency": self.currency,
+            }
+
+            response_update_wallet = self.xcoinApiCall("/info/balance", rgParams)
+            status = "OK" if response_update_wallet["status"] == "0000" else "ERROR"
+            self.available_eth = float(response_update_wallet["data"]["available_" + self.currency.lower()])
+            self.available_krw = float(response_update_wallet["data"]["available_krw"])
+
+            if report:
+                print("==========[Wallet Update]==========")
+                print("Status: " + status)
+                print("Available " + self.currency + ": " + str(response_update_wallet["data"]["available_" + self.currency.lower()]))
+                print("Available KRW: " + str(response_update_wallet["data"]["available_krw"]))
+
+            return None
+
+        def buy(self, units="ALL"):
+
+            self.recorder(report=False)
+
+            if units == "ALL":
+                before_fee_unit = self.available_krw / self.currency_current_value
+                expected_fee = before_fee_unit * self.trade_fee
+                units_buy = round(before_fee_unit - expected_fee, 4)
+
+            else:
+                units_buy = round(units, 4)
+
+            rgParams = {
+                "currency": self.currency,
+                "units": units_buy
+            }
+
+            response_buy = self.xcoinApiCall("/trade/market_buy", rgParams)
+            status = "OK" if response_buy["status"] == "0000" else "ERROR"
+
+            print("===============[BUY]===============")
+            print("Status     : " + status)
+            print("Order    ID: " + response_buy["order_id"])
+
+            for i in range(len(response_buy["data"])):
+                print("Contract No: " + str(i))
+                print("Contract ID: " + str(response_buy["data"][i]["cont_id"]))
+                print("Units   BUY: " + str(response_buy["data"][i]["units"]))
+                print("Total   BUY: " + str(response_buy["data"][i]["total"]))
+                print("FEE        : " + str(response_buy["data"][i]["fee"]))
+
+            self.update_wallet(report=False)
+
+            return None
