@@ -7,12 +7,12 @@ Author: Jihoon Kim
 import datetime
 import json
 import urllib.request
+
 import pandas as pd
-import time
 
 from account_info import api_key, api_secret
 from api.xcoin_api_client import XCoinAPI
-from config import api_url
+from api.config import api_url
 
 
 class Trader(XCoinAPI):

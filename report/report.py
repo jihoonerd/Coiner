@@ -4,10 +4,10 @@ Created on 10/1/17
 Author: Jihoon Kim
 """
 
-import json
 import datetime
+import json
 import urllib.request
-from config import api_url
+from api.config import api_url
 
 
 def print_price(currency='ALL'):
