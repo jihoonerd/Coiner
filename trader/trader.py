@@ -16,7 +16,7 @@ from xcoin_api_client import XCoinAPI
 
 class Trader(XCoinAPI):
 
-    def __init__(self, currency='ETH', trade_algorithm=None, api_key=api_key, api_secret=api_secret):
+    def __init__(self, currency='ETH', trade_algorithm=None):
 
         super(Trader, self).__init__(api_key=api_key, api_secret=api_secret)
         self.currency = currency
@@ -40,11 +40,11 @@ class Trader(XCoinAPI):
 
         time = str(datetime.datetime.now().strftime("%Y-%m-%d %H:%M:%S"))
         CUR = json_ticker['data']['closing_price']
-        print("===========================")
+        print("==========[Price Record]==========")
         print("Time  : " + time)
         print("Status: " + status)
         print("{0:6s}: ".format(self.currency) + CUR)
-        print("===========================")
+        print("==================================")
 
         time = pd.to_datetime(time, format="%Y-%m-%d %H:%M:%S")
         CUR = float(json_ticker['data']['closing_price'])
@@ -54,14 +54,20 @@ class Trader(XCoinAPI):
 
         return self.table
 
-    def update_wallet(self, currency="ETH"):
+    def update_wallet(self):
 
         rgParams = {
-            "currency": currency,
+            "currency": self.currency,
         }
 
-        result = self.xcoinApiCall("/info/balance", rgParams)
-        self.available_eth = float(result["data"]["available_eth"])
-        self.available_krw = float(result["data"]["available_krw"])
-        #print("Available " + currency + ": " + result["data"]["available_eth"])
-        #print("Available KRW: " + result["data"]["available_krw"])
+        response = self.xcoinApiCall("/info/balance", rgParams)
+        status = "OK" if response["status"] == "0000" else "ERROR"
+        self.available_eth = float(response["data"]["available_" + self.currency.lower()])
+        self.available_krw = float(response["data"]["available_krw"])
+
+        print("==========[Wallet Update]==========")
+        print("Status: " + status)
+        print("Available " + self.currency + ": " + str(response["data"]["available_" + self.currency.lower()]))
+        print("Available KRW: " + str(response["data"]["available_krw"]))
+
+        return None
