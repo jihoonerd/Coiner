@@ -13,6 +13,10 @@ from config import api_url
 def print_price(currency='ALL'):
     """
     Prints price of cryptocurrencies.
+
+    BTC: Bitcoin
+    ETH: Ethereum
+    XRP: Ripple
     
     :param currency: The type of currency
     :type currency: string or None
