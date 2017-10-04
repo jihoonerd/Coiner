@@ -44,6 +44,7 @@ class Trader(XCoinAPI):
             return None
 
         def recorder(self, report=True):
+
             """
             Records time and price of given currency in Pandas format.
 
@@ -63,6 +64,7 @@ class Trader(XCoinAPI):
                 print("=============[Price Record]=============")
                 print("Status: " + status)
                 print("Time  : " + time)
+                print("Index : " + str(len(self.table)))
                 print("{0:6s}: ".format(self.currency) + current_price)
 
             time = pd.to_datetime(time, format="%Y-%m-%d %H:%M:%S")
