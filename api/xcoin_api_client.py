@@ -16,7 +16,7 @@ import pycurl
 import json
 
 from account_info import api_key, api_secret
-from config import api_url
+from api.config import api_url
 
 
 class XCoinAPI:
@@ -43,7 +43,7 @@ class XCoinAPI:
         mt_array = mt.split(" ")[:2]
         return mt_array[1] + mt_array[0][2:5]
 
-    def xcoinApiCall(self, endpoint, rgParams):
+    def xcoinApiCall(self, endpoint, rg_params):
         # 1. Api-Sign and Api-Nonce information generation.
         # 2. Request related information from the Bithumb API server.
         #
@@ -54,7 +54,7 @@ class XCoinAPI:
             "endpoint" : endpoint
         }
 
-        uri_array = dict(endpoint_item_array, **rgParams) # Concatenate the two arrays.
+        uri_array = dict(endpoint_item_array, **rg_params) # Concatenate the two arrays.
 
         str_data = urllib.parse.urlencode(uri_array)
 
