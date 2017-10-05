@@ -37,6 +37,7 @@ def bollinger_band(table, window=20, std=2, draw=True):
         plt.plot(table.index, lower_band, label="Lower Band (" + str(std) + "$\sigma$)")
         plt.fill_between(table.index, lower_band, upper_band, facecolor='k', alpha=.15)
         plt.legend()
+        plt.grid()
         plt.title("Bollinger Band (Window=" + str(window) + "), Records started on: " +
                   str(table.Time[0]))
 
