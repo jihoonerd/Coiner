@@ -7,8 +7,10 @@ Author: Jihoon Kim
 import datetime
 import pandas as pd
 import time
+import math
 from account_info import api_key, api_secret
 from api.xcoin_api_client import XCoinAPI
+from algorithm.utils import bollinger_band
 
 
 class Trader(XCoinAPI):
@@ -18,7 +20,7 @@ class Trader(XCoinAPI):
             super(Trader, self).__init__(api_key=api_key, api_secret=api_secret)
             self.currency = currency
             self.trade_algorithm = trade_algorithm
-            self.table = pd.DataFrame(columns={'Time', 'Price'})
+            self.table = pd.DataFrame(columns={'Time', 'Price', 'Status'})
             self.currency_current_value = None
             self.available_cur = None
             self.available_krw = None
@@ -26,6 +28,7 @@ class Trader(XCoinAPI):
             self.min_trade_cur_decimal = None
 
             self.set_trade_fee()
+            self.recorder(record=False, report=False)
             self.update_wallet()
             self.set_min_trade_cur_decimal()
 
@@ -123,12 +126,10 @@ class Trader(XCoinAPI):
 
         def buy_market_price(self, units="ALL"):
 
-            self.recorder(record=False, report=False)
-
             if units == "ALL":
                 before_fee_unit = self.available_krw / self.currency_current_value
                 expected_fee = before_fee_unit * self.trade_fee
-                units_buy = round(before_fee_unit - expected_fee, self.min_trade_cur_decimal)
+                units_buy = math.floor((before_fee_unit - expected_fee) * (10**self.min_trade_cur_decimal))/(10**self.min_trade_cur_decimal)
 
             else:
                 units_buy = round(float(units), self.min_trade_cur_decimal)
@@ -157,16 +158,14 @@ class Trader(XCoinAPI):
 
             self.update_wallet(report=False)
 
-            return None
+            return units_buy
 
         def sell_market_price(self, units='ALL'):
-
-            self.recorder(record=False, report=False)
 
             if units == "ALL":
                 before_fee_unit = self.available_cur
                 expected_fee = before_fee_unit * self.trade_fee
-                units_sell = round(before_fee_unit - expected_fee, self.min_trade_cur_decimal)
+                units_sell = math.floor((before_fee_unit - expected_fee) * (10**self.min_trade_cur_decimal))/(10**self.min_trade_cur_decimal)
 
             else:
                 units_sell = round(float(units), self.min_trade_cur_decimal)
@@ -180,7 +179,7 @@ class Trader(XCoinAPI):
             status = "OK" if response_sell["status"] == "0000" else "ERROR"
 
             if status == "OK":
-                print("===============[BUY]===============")
+                print("===============[SELL]===============")
                 print("Status     : " + status)
                 print("Order    ID: " + response_sell["order_id"])
 
@@ -194,5 +193,23 @@ class Trader(XCoinAPI):
                 print(response_sell)
 
             self.update_wallet(report=False)
+
+            return units_sell
+
+        def run_trading(self):
+
+            while True:
+                self.recorder()
+                if len(self.table) > 20:
+                    bollinger_avg, bollinger_upper, bollinger_lower = bollinger_band(self.table,
+                                                                                     window=15, std=2,
+                                                                                     draw=False)
+
+                    if self.currency_current_value > 338600:
+                        self.sell_market_price()
+                    elif self.currency_current_value < 337000:
+                        self.buy_market_price()
+
+                time.sleep(5)
 
             return None
