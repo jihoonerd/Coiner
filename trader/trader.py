@@ -20,12 +20,24 @@ class Trader(XCoinAPI):
             self.trade_algorithm = trade_algorithm
             self.table = pd.DataFrame(columns={'Time', 'Price'})
             self.currency_current_value = None
-            self.available_eth = None
+            self.available_cur = None
             self.available_krw = None
             self.trade_fee = None
+            self.min_trade_cur_decimal = None
 
             self.set_trade_fee()
             self.update_wallet()
+            self.set_min_trade_cur_decimal()
+
+        def set_min_trade_cur_decimal(self):
+            if self.currency == 'BTC':
+                self.min_trade_cur_decimal = 3
+            elif self.currency == 'ETH':
+                self.min_trade_cur_decimal = 2
+
+            print("Set Minimum Trade Currency Decimal to " + str(self.min_trade_cur_decimal))
+
+            return None
 
         def set_trade_fee(self):
 
@@ -43,12 +55,12 @@ class Trader(XCoinAPI):
 
             return None
 
-        def recorder(self, report=True):
+        def recorder(self, record=True, report=True):
 
             """
-            Records time and price of given currency in Pandas format.
+            Records current_time and price of given currency in Pandas format.
 
-            :return: DataFrame of time and price
+            :return: DataFrame of current_time and price
             :rtype: pd.DataFrame
             """
 
@@ -58,21 +70,22 @@ class Trader(XCoinAPI):
             response_recorder = self.xcoinApiCall("/public/ticker/" + self.currency, rg_params)
             status = "OK" if response_recorder["status"] == "0000" else "ERROR"
             current_price = response_recorder["data"]["closing_price"]
-            time = str(datetime.datetime.now().strftime("%Y-%m-%d %H:%M:%S"))
+            current_time = str(datetime.datetime.now().strftime("%Y-%m-%d %H:%M:%S"))
 
             if report:
                 print("=============[Price Record]=============")
                 print("Status: " + status)
-                print("Time  : " + time)
+                print("Time  : " + current_time)
                 print("Index : " + str(len(self.table)))
                 print("{0:6s}: ".format(self.currency) + current_price)
 
-            time = pd.to_datetime(time, format="%Y-%m-%d %H:%M:%S")
+            current_time = pd.to_datetime(current_time, format="%Y-%m-%d %H:%M:%S")
             current_price = float(response_recorder["data"]["closing_price"])
             self.currency_current_value = current_price
 
-            new_data = {"Time": time, "Price": current_price}
-            self.table = self.table.append(new_data, ignore_index=True)
+            if record:
+                new_data = {"Time": current_time, "Price": current_price}
+                self.table = self.table.append(new_data, ignore_index=True)
 
             return self.table
 
@@ -84,7 +97,7 @@ class Trader(XCoinAPI):
 
             response_update_wallet = self.xcoinApiCall("/info/balance", rg_params)
             status = "OK" if response_update_wallet["status"] == "0000" else "ERROR"
-            self.available_eth = float(response_update_wallet["data"]["available_" + self.currency.lower()])
+            self.available_cur = float(response_update_wallet["data"]["available_" + self.currency.lower()])
             self.available_krw = float(response_update_wallet["data"]["available_krw"])
 
             if report:
@@ -95,17 +108,17 @@ class Trader(XCoinAPI):
 
             return None
 
-        def buy(self, units="ALL"):
+        def buy_market_price(self, units="ALL"):
 
-            self.recorder(report=False)
+            self.recorder(record=False, report=False)
 
             if units == "ALL":
                 before_fee_unit = self.available_krw / self.currency_current_value
                 expected_fee = before_fee_unit * self.trade_fee
-                units_buy = round(before_fee_unit - expected_fee, 4)
+                units_buy = round(before_fee_unit - expected_fee, self.min_trade_cur_decimal)
 
             else:
-                units_buy = round(float(units), 4)
+                units_buy = round(float(units), self.min_trade_cur_decimal)
 
             rg_params = {
                 "currency": self.currency,
@@ -128,6 +141,44 @@ class Trader(XCoinAPI):
                     print("FEE        : " + str(response_buy["data"][i]["fee"]))
             else:
                 print(response_buy)
+
+            self.update_wallet(report=False)
+
+            return None
+
+        def sell_market_price(self, units='ALL'):
+
+            self.recorder(record=False, report=False)
+
+            if units == "ALL":
+                before_fee_unit = self.available_cur
+                expected_fee = before_fee_unit * self.trade_fee
+                units_sell = round(before_fee_unit - expected_fee, self.min_trade_cur_decimal)
+
+            else:
+                units_sell = round(float(units), self.min_trade_cur_decimal)
+
+            rg_params = {
+                "currency": self.currency,
+                "units": units_sell
+            }
+
+            response_sell = self.xcoinApiCall("/trade/market_sell", rg_params)
+            status = "OK" if response_sell["status"] == "0000" else "ERROR"
+
+            if status == "OK":
+                print("===============[BUY]===============")
+                print("Status     : " + status)
+                print("Order    ID: " + response_sell["order_id"])
+
+                for i in range(len(response_sell["data"])):
+                    print("Contract No: " + str(i))
+                    print("Contract ID: " + str(response_sell["data"][i]["cont_id"]))
+                    print("Units  SELL: " + str(response_sell["data"][i]["units"]))
+                    print("Total  SELL: " + str(response_sell["data"][i]["total"]))
+                    print("FEE        : " + str(response_sell["data"][i]["fee"]))
+            else:
+                print(response_sell)
 
             self.update_wallet(report=False)
 
