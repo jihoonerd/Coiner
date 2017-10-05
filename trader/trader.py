@@ -29,6 +29,19 @@ class Trader(XCoinAPI):
             self.update_wallet()
             self.set_min_trade_cur_decimal()
 
+        def info(self):
+            print("==============[Trader INFO]==============")
+            print("Currency           : " + self.currency)
+            print("Trading Algorithm  : " + str(self.trade_algorithm))
+            print("Number of Logs     : " + str(len(self.table)))
+            print("Last Currency Value: " + str(self.currency_current_value))
+            print("Available Currency : " + str(self.available_cur))
+            print("Available KRW      : " + str(self.available_krw))
+            print("Trading Fee        : " + str(self.trade_fee))
+            print("Min Trading Decimal: " + str(self.min_trade_cur_decimal))
+
+            return None
+
         def set_min_trade_cur_decimal(self):
             if self.currency == 'BTC':
                 self.min_trade_cur_decimal = 3
