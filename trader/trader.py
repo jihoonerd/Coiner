@@ -111,7 +111,7 @@ class Trader(XCoinAPI):
             current_time = pd.to_datetime(current_time, format="%Y-%m-%d %H:%M:%S")
             last_price = float(response_recorder["data"]["closing_price"])
             self.last_currency_price = last_price
-            self.target_buy_price = float(self.orderbook.Buy_Price[2])
+            self.target_buy_price = float(self.orderbook.Buy_Price[4])
             self.target_sell_price = float(self.orderbook.Sell_Price[6])
 
             if record:
@@ -175,7 +175,7 @@ class Trader(XCoinAPI):
             return units_buy, status
 
         def sell_place(self, units="ALL"):
-
+            # TODO precision mismatch. before_fee_unit = self.available_cur -> flooring?
             if units == "ALL":
                 before_fee_unit = self.available_cur
                 expected_fee = before_fee_unit * self.trade_fee
@@ -308,7 +308,7 @@ class Trader(XCoinAPI):
             self.orderbook = orderbook
 
             if report:
-                print(self.orderbook.head())
+                print(self.orderbook.head(10))
             return orderbook
 
         def run_trading(self):
@@ -332,11 +332,9 @@ class Trader(XCoinAPI):
                     elif self.last_currency_price < bollinger_lower.values[-1]:
                         _, status = self.buy_place()
                         if status == "OK":
-                            buy_limit = self.trader_buy_price * (self.trade_fee * self.trader_buy_units * 2.5 + 1) + 200
+                            buy_limit = self.trader_buy_price * (self.trade_fee * self.trader_buy_units * 3 + 1) + 200
                             print("Set Buy Limit: " + str(buy_limit))
 
                 time.sleep(10)
-
-            return None
 
 
