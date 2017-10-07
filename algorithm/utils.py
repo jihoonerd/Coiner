@@ -8,7 +8,7 @@ Author: Jihoon Kim
 import matplotlib.pyplot as plt
 
 
-def bollinger_band(table, window=20, std=2, draw=True):
+def bollinger_band(table, window=20, std=2.0, draw=True):
 
     """
     Returns Bollinger Bands (MA, Upper_band, Lower_band)
