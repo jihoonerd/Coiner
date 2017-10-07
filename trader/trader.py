@@ -42,6 +42,12 @@ class Trader(XCoinAPI):
             self.info()
 
         def info(self):
+            """
+            Prints the information of Trader class.
+
+            :return: None
+            :rtype: None
+            """
             print("==============[Trader INFO]==============")
             print("Currency           : " + self.currency)
             print("Trading Algorithm  : " + str(self.trade_algorithm))
@@ -85,7 +91,7 @@ class Trader(XCoinAPI):
         def recorder(self, record=True, report=True):
 
             """
-            Records current_time and price of given currency in Pandas format.
+            Records current time and price of given currency in Pandas format.
 
             :return: DataFrame of current_time and price
             :rtype: pd.DataFrame
@@ -112,7 +118,7 @@ class Trader(XCoinAPI):
             last_price = float(response_recorder["data"]["closing_price"])
             self.last_currency_price = last_price
             self.target_buy_price = float(self.orderbook.Buy_Price[4])
-            self.target_sell_price = float(self.orderbook.Sell_Price[6])
+            self.target_sell_price = float(self.orderbook.Sell_Price[5])
 
             if record:
                 new_data = {"Time": current_time, "Price": last_price}
@@ -332,7 +338,8 @@ class Trader(XCoinAPI):
                     elif self.last_currency_price < bollinger_lower.values[-1]:
                         _, status = self.buy_place()
                         if status == "OK":
-                            buy_limit = self.trader_buy_price * (self.trade_fee * self.trader_buy_units * 3 + 1) + 200
+                            # TODO this trading fee only accounts for buying fee. Should refelct selling trading fee.
+                            buy_limit = self.trader_buy_price * (self.trade_fee * self.trader_buy_units * 2.5 + 1) * 1.01
                             print("Set Buy Limit: " + str(buy_limit))
 
                 time.sleep(10)
