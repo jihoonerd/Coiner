@@ -5,8 +5,6 @@ Auto Cryptocurrency Trading System
 # Introduction
 암호화폐를 프로그래밍을 통해 프로그램매매를 할 수 있습니다.
 
-# Dependencies
-
 # Setup
 1. Repositroy를 clone합니다.
 ```bash
@@ -33,7 +31,9 @@ python -i tester.py
 
 1. 지정가 거래
 2. 시장가 거래
-3. 볼린저 밴드
+3. Bollinger Band
+
+<img src="https://github.com/jihoon1990/Coiner/blob/master/log/2017-10-07%2022:34:36.png?raw=true" width="50%" height="50%">
 
 # Disclaimer
 THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR
