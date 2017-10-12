@@ -23,7 +23,7 @@ class Trader(XCoinAPI):
             super(Trader, self).__init__(api_key=api_key, api_secret=api_secret)
             self.currency = currency
             self.trade_algorithm = trade_algorithm
-            self.table = pd.DataFrame(columns={'Time', 'Price', 'Buy_Price', 'Sell_Price'})
+            self.table = pd.DataFrame(columns={'Time', 'Price'})
             self.orderbook = None
             self.last_currency_price = None
             self.available_cur = None
@@ -117,7 +117,7 @@ class Trader(XCoinAPI):
             current_time = pd.to_datetime(current_time, format="%Y-%m-%d %H:%M:%S")
             last_price = float(response_recorder["data"]["closing_price"])
             self.last_currency_price = last_price
-            self.target_buy_price = float(self.orderbook.Buy_Price[4])
+            self.target_buy_price = float(self.orderbook.Buy_Price[5])
             self.target_sell_price = float(self.orderbook.Sell_Price[5])
 
             if record:
@@ -320,12 +320,17 @@ class Trader(XCoinAPI):
         def run_trading(self):
 
             buy_limit = self.last_currency_price
+            count = 0
+            file_name = str(datetime.datetime.now().strftime("%Y-%m-%d %H:%M:%S"))
 
             while True:
+                count += 1
                 self.recorder()
                 if len(self.table) > 15:
+                    window = 15
+                    std = 2
                     bollinger_avg, bollinger_upper, bollinger_lower = bollinger_band(self.table,
-                                                                                     window=15, std=2,
+                                                                                     window=window, std=std,
                                                                                      draw=False)
 
                     if self.last_currency_price > bollinger_upper.values[-1]:
@@ -341,6 +346,21 @@ class Trader(XCoinAPI):
                             # TODO this trading fee only accounts for buying fee. Should refelct selling trading fee.
                             buy_limit = self.trader_buy_price * (self.trade_fee * self.trader_buy_units * 2.5 + 1) * 1.01
                             print("Set Buy Limit: " + str(buy_limit))
+
+                    if count % 100 == 0:
+                        import matplotlib.pyplot as plt
+                        self.table.to_csv('./log/' + file_name + '.csv', index=False)
+                        plt.plot(self.table.index, self.table.Price, label="Price")
+                        plt.plot(self.table.index, bollinger_avg, label="MA (" + str(window) + ")")
+                        plt.plot(self.table.index, bollinger_upper, label="Upper Band (" + str(std) + "$\sigma$)")
+                        plt.plot(self.table.index, bollinger_lower, label="Lower Band (" + str(std) + "$\sigma$)")
+                        plt.fill_between(self.table.index, bollinger_lower, bollinger_upper, facecolor='k', alpha=.15)
+                        plt.legend()
+                        plt.grid()
+                        plt.title("Bollinger Band (Window=" + str(window) + "), Records started on: " +
+                                  str(self.table.Time[0]))
+                        plt.savefig('./log/' + file_name + '.png')
+                        plt.close()
 
                 time.sleep(10)
 
