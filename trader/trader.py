@@ -18,7 +18,7 @@ from algorithm.utils import bollinger_band
 
 class Trader(XCoinAPI):
 
-        def __init__(self, currency='ETH', trade_algorithm=None):
+        def __init__(self, currency='BTC', trade_algorithm=None):
 
             super(Trader, self).__init__(api_key=api_key, api_secret=api_secret)
             self.currency = currency
@@ -38,7 +38,7 @@ class Trader(XCoinAPI):
             self.set_trade_fee()
             self.recorder(record=False, report=False)
             self.update_wallet()
-            self.set_min_trade_cur_decimal()
+            self._set_min_trade_cur_decimal()
             self.info()
 
         def info(self):
@@ -62,14 +62,13 @@ class Trader(XCoinAPI):
 
             return None
 
-        def set_min_trade_cur_decimal(self):
-            if self.currency == 'BTC':
+        def _set_min_trade_cur_decimal(self):
+            if self.currency in ['BTC', 'ZEC']:
                 self.min_trade_cur_decimal = 3
-            elif self.currency == 'ETH':
+            elif self.currency in ['ETH', 'DASH', 'BCH', 'XMR']:
                 self.min_trade_cur_decimal = 2
-
-            print("Set Minimum Trade Currency Decimal to " + str(self.min_trade_cur_decimal))
-
+            elif self.currency in ['LTC', 'ETC', 'QTUM']:
+                self.min_trade_cur_decimal = 1
             return None
 
         def set_trade_fee(self):
