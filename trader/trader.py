@@ -35,10 +35,10 @@ class Trader(XCoinAPI):
             self.trader_buy_price = None
             self.trader_buy_units = None
 
-            self.set_trade_fee()
+            self._set_min_trade_cur_decimal()
+            self._set_trade_fee()
             self.recorder(record=False, report=False)
             self.update_wallet()
-            self._set_min_trade_cur_decimal()
             self.info()
 
         def info(self):
@@ -63,16 +63,28 @@ class Trader(XCoinAPI):
             return None
 
         def _set_min_trade_cur_decimal(self):
+            """
+            Set minimum decimal to communicate Bithumb API
+
+            :return: None
+            :rtype: None
+            """
             if self.currency in ['BTC', 'ZEC']:
                 self.min_trade_cur_decimal = 3
             elif self.currency in ['ETH', 'DASH', 'BCH', 'XMR']:
                 self.min_trade_cur_decimal = 2
             elif self.currency in ['LTC', 'ETC', 'QTUM']:
                 self.min_trade_cur_decimal = 1
+
             return None
 
-        def set_trade_fee(self):
+        def _set_trade_fee(self):
+            """
+            Set trade fee
 
+            :return: None
+            :rtype: None
+            """
             rg_params = {
                 "currency": self.currency
             }
