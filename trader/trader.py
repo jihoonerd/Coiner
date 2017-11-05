@@ -18,12 +18,12 @@ from algorithm.utils import bollinger_band
 
 class Trader(XCoinAPI):
 
-        def __init__(self, currency='BTC', trade_algorithm=None):
+        def __init__(self, currency='BTC'):
 
             super(Trader, self).__init__(api_key=api_key, api_secret=api_secret)
             self.currency = currency
-            self.trade_algorithm = trade_algorithm
-            self.table = pd.DataFrame(columns={'Time', 'Price'})
+            self.trade_algorithm = None
+            self.price_table = pd.DataFrame(columns={'Time', 'Price'})
             self.orderbook = None
             self.last_currency_price = None
             self.available_cur = None
@@ -37,7 +37,7 @@ class Trader(XCoinAPI):
 
             self._set_min_trade_cur_decimal()
             self._set_trade_fee()
-            self.recorder(record=False, report=False)
+            self.record_price(record=False, report=False)
             self.update_wallet()
             self.info()
 
@@ -51,7 +51,7 @@ class Trader(XCoinAPI):
             print("==============[Trader INFO]==============")
             print("Currency           : " + self.currency)
             print("Trading Algorithm  : " + str(self.trade_algorithm))
-            print("Number of Logs     : " + str(len(self.table)))
+            print("Number of Logs     : " + str(len(self.price_table)))
             print("Last Currency Value: " + str(self.last_currency_price))
             print("Buy Price          : " + str(self.target_buy_price))
             print("Sell Price         : " + str(self.target_sell_price))
@@ -93,13 +93,9 @@ class Trader(XCoinAPI):
             status = "OK" if response_fee["status"] == "0000" else "ERROR"
             self.trade_fee = float(response_fee["data"]["trade_fee"])
 
-            print("==========[Register Trade Fee]==========")
-            print("Status   : " + status)
-            print("Trade Fee: " + str(response_fee["data"]["trade_fee"]))
-
             return None
 
-        def recorder(self, record=True, report=True):
+        def record_price(self, record=True, report=True):
 
             """
             Records current time and price of given currency in Pandas format.
@@ -122,7 +118,7 @@ class Trader(XCoinAPI):
                 print("=============[Price Record]=============")
                 print("Status: " + status)
                 print("Time  : " + current_time)
-                print("Index : " + str(len(self.table)))
+                print("Index : " + str(len(self.price_table)))
                 print("{0:6s}: ".format(self.currency) + last_price)
 
             current_time = pd.to_datetime(current_time, format="%Y-%m-%d %H:%M:%S")
@@ -133,9 +129,9 @@ class Trader(XCoinAPI):
 
             if record:
                 new_data = {"Time": current_time, "Price": last_price}
-                self.table = self.table.append(new_data, ignore_index=True)
+                self.price_table = self.price_table.append(new_data, ignore_index=True)
 
-            return self.table
+            return self.price_table
 
         def update_wallet(self, report=True):
 
@@ -336,11 +332,11 @@ class Trader(XCoinAPI):
 
             while True:
                 count += 1
-                self.recorder()
-                if len(self.table) > 15:
+                self.record_price()
+                if len(self.price_table) > 15:
                     window = 15
                     std = 2
-                    bollinger_avg, bollinger_upper, bollinger_lower = bollinger_band(self.table,
+                    bollinger_avg, bollinger_upper, bollinger_lower = bollinger_band(self.price_table,
                                                                                      window=window, std=std,
                                                                                      draw=False)
 
@@ -360,16 +356,16 @@ class Trader(XCoinAPI):
 
                     if count % 100 == 0:
                         import matplotlib.pyplot as plt
-                        self.table.to_csv('./log/' + file_name + '.csv', index=False)
-                        plt.plot(self.table.index, self.table.Price, label="Price")
-                        plt.plot(self.table.index, bollinger_avg, label="MA (" + str(window) + ")")
-                        plt.plot(self.table.index, bollinger_upper, label="Upper Band (" + str(std) + "$\sigma$)")
-                        plt.plot(self.table.index, bollinger_lower, label="Lower Band (" + str(std) + "$\sigma$)")
-                        plt.fill_between(self.table.index, bollinger_lower, bollinger_upper, facecolor='k', alpha=.15)
+                        self.price_table.to_csv('./log/' + file_name + '.csv', index=False)
+                        plt.plot(self.price_table.index, self.price_table.Price, label="Price")
+                        plt.plot(self.price_table.index, bollinger_avg, label="MA (" + str(window) + ")")
+                        plt.plot(self.price_table.index, bollinger_upper, label="Upper Band (" + str(std) + "$\sigma$)")
+                        plt.plot(self.price_table.index, bollinger_lower, label="Lower Band (" + str(std) + "$\sigma$)")
+                        plt.fill_between(self.price_table.index, bollinger_lower, bollinger_upper, facecolor='k', alpha=.15)
                         plt.legend()
                         plt.grid()
                         plt.title("Bollinger Band (Window=" + str(window) + "), Records started on: " +
-                                  str(self.table.Time[0]))
+                                  str(self.price_table.Time[0]))
                         plt.savefig('./log/' + file_name + '.png')
                         plt.close()
 
