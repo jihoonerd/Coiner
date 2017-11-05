@@ -134,7 +134,14 @@ class Trader(XCoinAPI):
             return self.price_table
 
         def update_wallet(self, report=True):
+            """
+            Retrieve user's wallet information
 
+            :param report: Print report
+            :type report: Boolean
+            :return: None
+            :rtype: None
+            """
             rg_params = {
                 "currency": self.currency,
             }
@@ -147,7 +154,8 @@ class Trader(XCoinAPI):
             if report:
                 print("============[Wallet Update]============")
                 print("Status: " + status)
-                print("Available " + self.currency + ": " + str(response_update_wallet["data"]["available_" + self.currency.lower()]))
+                print("Available " + self.currency + ": " + str(response_update_wallet["data"]["available_" +
+                                                                                               self.currency.lower()]))
                 print("Available KRW: " + str(response_update_wallet["data"]["available_krw"]))
 
             return None
@@ -157,7 +165,8 @@ class Trader(XCoinAPI):
             if units == "ALL":
                 before_fee_unit = self.available_krw / self.target_buy_price
                 expected_fee = before_fee_unit * self.trade_fee
-                units_buy = math.floor((before_fee_unit - expected_fee) * (10**self.min_trade_cur_decimal))/(10**self.min_trade_cur_decimal)
+                units_buy = math.floor((before_fee_unit - expected_fee) * (10**self.min_trade_cur_decimal)) / \
+                            (10**self.min_trade_cur_decimal)
             else:
                 units_buy = round(float(units), self.min_trade_cur_decimal)
 
