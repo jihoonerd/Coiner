@@ -37,8 +37,8 @@ class Trader(XCoinAPI):
 
             self._set_min_trade_cur_decimal()
             self._set_trade_fee()
-            self.record_price(record=False, report=False)
-            self.update_wallet()
+            self.record_price(report=False)
+            self.update_wallet(report=False)
             self.info()
 
         def info(self):
@@ -90,12 +90,11 @@ class Trader(XCoinAPI):
             }
 
             response_fee = self.xcoinApiCall("/info/account", rg_params)
-            status = "OK" if response_fee["status"] == "0000" else "ERROR"
             self.trade_fee = float(response_fee["data"]["trade_fee"])
 
             return None
 
-        def record_price(self, record=True, report=True):
+        def record_price(self, report=True):
 
             """
             Records current time and price of given currency in Pandas format.
@@ -104,32 +103,24 @@ class Trader(XCoinAPI):
             :rtype: pd.DataFrame
             """
 
-            rg_params = {
+            rg_params = {}
+            response_ticker = self.xcoinApiCall("/public/ticker/" + self.currency, rg_params)
+            status = "OK" if response_ticker['status'] == "0000" else "ERROR"
+            ticker_return = dict()
+            for i in response_ticker['data']:
+                ticker_return['{0}'.format(i)] = response_ticker["data"][i]
+            current_time = pd.to_datetime(str(datetime.datetime.now().strftime("%Y-%m-%d %H:%M:%S")),
+                                          format="%Y-%m-%d %H:%M:%S")
 
-            }
-
-            self.record_orderbook()
-            response_recorder = self.xcoinApiCall("/public/ticker/" + self.currency, rg_params)
-            status = "OK" if response_recorder["status"] == "0000" else "ERROR"
-            last_price = response_recorder["data"]["closing_price"]
-            current_time = str(datetime.datetime.now().strftime("%Y-%m-%d %H:%M:%S"))
+            new_data = {"Time": current_time, "Price": ticker_return['closing_price']}
+            self.price_table = self.price_table.append(new_data, ignore_index=True)
 
             if report:
                 print("=============[Price Record]=============")
                 print("Status: " + status)
-                print("Time  : " + current_time)
+                print("Time  : " + str(current_time))
                 print("Index : " + str(len(self.price_table)))
-                print("{0:6s}: ".format(self.currency) + last_price)
-
-            current_time = pd.to_datetime(current_time, format="%Y-%m-%d %H:%M:%S")
-            last_price = float(response_recorder["data"]["closing_price"])
-            self.last_currency_price = last_price
-            self.target_buy_price = float(self.orderbook.Buy_Price[5])
-            self.target_sell_price = float(self.orderbook.Sell_Price[5])
-
-            if record:
-                new_data = {"Time": current_time, "Price": last_price}
-                self.price_table = self.price_table.append(new_data, ignore_index=True)
+                print("{0:6s}: ".format(self.currency) + ticker_return["closing_price"])
 
             return self.price_table
 
@@ -146,17 +137,17 @@ class Trader(XCoinAPI):
                 "currency": self.currency,
             }
 
-            response_update_wallet = self.xcoinApiCall("/info/balance", rg_params)
-            status = "OK" if response_update_wallet["status"] == "0000" else "ERROR"
-            self.available_cur = float(response_update_wallet["data"]["available_" + self.currency.lower()])
-            self.available_krw = float(response_update_wallet["data"]["available_krw"])
+            response_balance = self.xcoinApiCall("/info/balance", rg_params)
+            status = "OK" if response_balance["status"] == "0000" else "ERROR"
+            self.available_cur = float(response_balance["data"]["available_" + self.currency.lower()])
+            self.available_krw = float(response_balance["data"]["available_krw"])
 
             if report:
                 print("============[Wallet Update]============")
                 print("Status: " + status)
-                print("Available " + self.currency + ": " + str(response_update_wallet["data"]["available_" +
-                                                                                               self.currency.lower()]))
-                print("Available KRW: " + str(response_update_wallet["data"]["available_krw"]))
+                print("Available " + self.currency + ": " + str(response_balance["data"]
+                                                                ["available_" + self.currency.lower()]))
+                print("Available KRW: " + str(response_balance["data"]["available_krw"]))
 
             return None
 

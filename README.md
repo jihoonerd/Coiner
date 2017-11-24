@@ -2,14 +2,30 @@
 
 Auto Cryptocurrency Trading System
 
-# Introduction
-암호화폐를 프로그래밍을 통해 프로그램매매를 할 수 있습니다.
+* This API-based system is tested South Korea only. Not guarantee for other countries using this API
+
+# Dependencies
+* Python 3.6
+* Numpy
+* Pandas
+* Matplotlib
 
 # Setup
-1. Repositroy를 clone합니다.
+1. Clone the repository
 ```bash
 git clone https://github.com/jihoon1990/Coiner.git
 ```
+
+2. Install Packages
+* For `pip install`
+```bash
+pip install -r requirements.txt
+```
+* For `conda`
+```bash
+conda install --yes --file requirements.txt
+```
+
 2. Root folder에 account_info.py를 만들고 api_key,와 api_secret을 입력합니다.
 ```python
 api_key = "YOUR API KEY"
