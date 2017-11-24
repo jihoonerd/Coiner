@@ -19,11 +19,11 @@ git clone https://github.com/jihoon1990/Coiner.git
 2. Install Packages
 * For `pip install`
 ```bash
-pip install -r requirements.txt
+pip install urllib pandas
 ```
 * For `conda`
 ```bash
-conda install --yes --file requirements.txt
+conda install urllib pandas
 ```
 
 2. Root folder에 account_info.py를 만들고 api_key,와 api_secret을 입력합니다.

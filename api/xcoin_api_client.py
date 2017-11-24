@@ -10,7 +10,8 @@ import sys
 import time
 import math
 import base64
-import hmac, hashlib
+import hmac
+import hashlib
 import urllib.parse
 import pycurl
 import json
