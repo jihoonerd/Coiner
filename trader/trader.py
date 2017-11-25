@@ -22,8 +22,8 @@ class Trader(XCoinAPI):
 
             super(Trader, self).__init__(api_key=api_key, api_secret=api_secret)
             self.currency = currency
-            self.trade_algorithm = None
             self.price_table = pd.DataFrame(columns={'Time', 'Price'})
+            self.trade_table = pd.DataFrame(columns={'Time', 'Price', 'Units', 'Buy/Sell'})
             self.orderbook = None
             self.last_currency_price = None
             self.available_cur = None
@@ -50,7 +50,6 @@ class Trader(XCoinAPI):
             """
             print("==============[Trader INFO]==============")
             print("Currency           : " + self.currency)
-            print("Trading Algorithm  : " + str(self.trade_algorithm))
             print("Number of Logs     : " + str(len(self.price_table)))
             print("Last Currency Value: " + str(self.last_currency_price))
             print("Buy Price          : " + str(self.target_buy_price))
@@ -70,11 +69,11 @@ class Trader(XCoinAPI):
             :rtype: None
             """
             if self.currency in ['BTC', 'ZEC']:
-                self.min_trade_cur_decimal = 3
+                self.min_trade_cur_decimal = 1e-3
             elif self.currency in ['ETH', 'DASH', 'BCH', 'XMR']:
-                self.min_trade_cur_decimal = 2
+                self.min_trade_cur_decimal = 1e-2
             elif self.currency in ['LTC', 'ETC', 'QTUM']:
-                self.min_trade_cur_decimal = 1
+                self.min_trade_cur_decimal = 1e-1
 
             return None
 
@@ -151,21 +150,21 @@ class Trader(XCoinAPI):
 
             return None
 
-        def buy_place(self, units="ALL"):
+        def buy_place(self, buy_price, units="ALL"):
 
             if units == "ALL":
-                before_fee_unit = self.available_krw / self.target_buy_price
+                before_fee_unit = self.available_krw / buy_price
                 expected_fee = before_fee_unit * self.trade_fee
-                units_buy = math.floor((before_fee_unit - expected_fee) * (10**self.min_trade_cur_decimal)) / \
-                            (10**self.min_trade_cur_decimal)
+                units_buy = math.floor((before_fee_unit - expected_fee) * (1 / self.min_trade_cur_decimal)) * self.\
+                    min_trade_cur_decimal
             else:
-                units_buy = round(float(units), self.min_trade_cur_decimal)
+                units_buy = math.floor(float(units) * 100.0) * self.min_trade_cur_decimal
 
             rg_params = {
                 "order_currency": self.currency,
                 "payment_currency": "KRW",
                 "units": units_buy,
-                "price": int(self.target_buy_price),
+                "price": int(buy_price),
                 "type": "bid"
             }
 
@@ -183,9 +182,12 @@ class Trader(XCoinAPI):
             else:
                 print(response_buy)
 
+            current_time = pd.to_datetime(str(datetime.datetime.now().strftime("%Y-%m-%d %H:%M:%S")),
+                                          format="%Y-%m-%d %H:%M:%S")
+            new_data = {"Time": current_time, "Price": buy_price, 'Units': units_buy, 'Buy/Sell': 'Buy'}
+            self.trade_table = self.trade_table.append(new_data, ignore_index=True)
             self.update_wallet(report=False)
-
-            return units_buy, status
+            return units_buy
 
         def sell_place(self, units="ALL"):
             # TODO precision mismatch. before_fee_unit = self.available_cur -> flooring?
