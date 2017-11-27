@@ -37,7 +37,7 @@ class Trader(XCoinAPI):
 
             self._set_min_trade_cur_decimal()
             self._set_trade_fee()
-            self.record_price(report=False)
+            self.record_price(report=False, record=False)
             self.update_wallet(report=False)
             self.info()
 
@@ -93,8 +93,7 @@ class Trader(XCoinAPI):
 
             return None
 
-        def record_price(self, report=True):
-
+        def record_price(self, report=True, record=True):
             """
             Records current time and price of given currency in Pandas format.
 
@@ -111,8 +110,9 @@ class Trader(XCoinAPI):
             current_time = pd.to_datetime(str(datetime.datetime.now().strftime("%Y-%m-%d %H:%M:%S")),
                                           format="%Y-%m-%d %H:%M:%S")
 
-            new_data = {"Time": current_time, "Price": ticker_return['closing_price']}
-            self.price_table = self.price_table.append(new_data, ignore_index=True)
+            if record:
+                new_data = {"Time": current_time, "Price": ticker_return['closing_price']}
+                self.price_table = self.price_table.append(new_data, ignore_index=True)
 
             if report:
                 print("=============[Price Record]=============")
