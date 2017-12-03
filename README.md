@@ -2,7 +2,7 @@
 
 Auto Cryptocurrency Trading System
 
-* This API-based system is tested South Korea only. Not guarantee for other countries using this API
+* This API-based system is tested in South Korea only.
 
 # Dependencies
 * Python 3.6
@@ -11,45 +11,37 @@ Auto Cryptocurrency Trading System
 * Matplotlib
 
 # Setup
-1. Clone the repository
+1. Clone this repository
 ```bash
-git clone https://github.com/jihoon1990/Coiner.git
+$ git clone https://github.com/jihoon1990/Coiner.git
 ```
 
 2. Install Packages
 * For `pip install`
 ```bash
-pip install urllib pandas
+$ pip install urllib pandas
 ```
 * For `conda`
 ```bash
-conda install urllib pandas
+$ conda install urllib pandas
 ```
 
-2. Root folder에 account_info.py를 만들고 api_key,와 api_secret을 입력합니다.
+2. Create `account_info.py` with `api_key` and `api_secret`
 ```python
 api_key = "YOUR API KEY"
 api_secret = "YOUR API SECRET KEY"
 ```
-**gitignore에서 account_info.py를 제외하도록 하였습니다. API KEY가 유출되지 않도록 주의하시기 바랍니다.**
+**Please be careful of exposing your api keys!**
 
-3. `Trader` class의 `run_trading` method를 통해 거래를 시작할 수 있습니다.
-
-# Example
-다음 command를 통해 demo를 실행할 수 있습니다. ***실제 거래를 발생시키므로 유의하시기 바랍니다.***
-
-```bash
-python -i tester.py
-```
 
 # Updates
-현재 초기 버전으로 기초적인 기능만 지원합니다. 현재 제공되는 주요사항은 다음과 같습니다.
+Currently, it supports basic fatures only
 
-1. 지정가 거래
-2. 시장가 거래
-3. 내 계좌 업데이트
-4. 호가창 조회 (최대 매도, 매수 각 20호가 까지 조회 가능)
-5. 시세 기록
+1. Bid/Ask Order
+2. Trade with market price
+3. Query orderbook
+4. Record the price of cryptocurrency
+5. Record the history of trading
 3. Bollinger Band
 
 <img src="https://github.com/jihoon1990/Coiner/blob/master/log/2017-10-07%2022:34:36.png?raw=true" width="50%" height="50%">
