@@ -24,7 +24,7 @@ class Trader(XCoinAPI):
             self.currency = currency
             self.price_table = pd.DataFrame(columns={'Time', 'Price'})
             self.trade_table = pd.DataFrame(columns={'Time', 'Price', 'Units', 'Buy/Sell'})
-            self.orderbook = None
+            self.orderbook = pd.DataFrame(columns={'Bid_Price', 'Bid_Quantity', 'Ask_Price', 'Ask_Quantity'})
             self.last_currency_price = None
             self.available_cur = None
             self.available_krw = None
@@ -303,30 +303,24 @@ class Trader(XCoinAPI):
             read_orderbook = url_orderbook.read()
             json_orderbook = json.loads(read_orderbook)
 
-            orderbook = pd.DataFrame(columns={'Buy_Price', 'Buy_Quantity', 'Sell_Price', 'Sell_Quantity'})
-
             status = "OK" if json_orderbook['status'] == "0000" else "ERROR"
-
             print("==========[Record Orderbook]==========")
             print("Time  : " + str(datetime.datetime.now().strftime("%Y-%m-%d %H:%M:%S")))
             print("Status: " + status)
-
             for i in range(len(json_orderbook["data"]["bids"])):
                 buy_price = json_orderbook["data"]["bids"][i]["price"]
                 buy_quantity = json_orderbook["data"]["bids"][i]["quantity"]
                 sell_price = json_orderbook["data"]["asks"][i]["price"]
                 sell_quantity = json_orderbook["data"]["asks"][i]["quantity"]
 
-                orderbook = orderbook.append({'Buy_Price': buy_price,
-                                              'Buy_Quantity': buy_quantity,
-                                              'Sell_Price': sell_price,
-                                              'Sell_Quantity': sell_quantity}, ignore_index=True)
-
-            self.orderbook = orderbook
+                self.orderbook.append({'Bid_Price': buy_price,
+                                       'Bid_Quantity': buy_quantity,
+                                       'Ask_Price': sell_price,
+                                       'Ask_Quantity': sell_quantity}, ignore_index=True)
 
             if report:
                 print(self.orderbook.head(10))
-            return orderbook
+            return self.orderbook
 
         def run_trading(self):
 
