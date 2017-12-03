@@ -225,19 +225,19 @@ class Trader(XCoinAPI):
 
             return units_ask
 
-        def buy_market_price(self, units="ALL"):
+        def order_market_price_bid(self, units="ALL"):
 
             if units == "ALL":
-                before_fee_unit = self.available_krw / self.last_currency_price
+                before_fee_unit = self.available_krw / bid_price
                 expected_fee = before_fee_unit * self.trade_fee
-                units_buy = math.floor((before_fee_unit - expected_fee) * (10**self.min_trade_cur_decimal))/(10**self.min_trade_cur_decimal)
-
+                units_bid = math.floor((before_fee_unit - expected_fee) * (1 / self.min_trade_cur_decimal)) * self.\
+                    min_trade_cur_decimal
             else:
-                units_buy = round(float(units), self.min_trade_cur_decimal)
+                units_bid = math.floor(float(units) * 1/self.min_trade_cur_decimal) * self.min_trade_cur_decimal
 
             rg_params = {
                 "currency": self.currency,
-                "units": units_buy
+                "units": units_bid
             }
 
             response_buy = self.xcoinApiCall("/trade/market_buy", rg_params)
@@ -259,21 +259,22 @@ class Trader(XCoinAPI):
 
             self.update_wallet(report=False)
 
-            return units_buy
+            return units_bid
 
-        def sell_market_price(self, units='ALL'):
+        def order_market_price_ask(self, units='ALL'):
 
             if units == "ALL":
                 before_fee_unit = self.available_cur
-                expected_fee = before_fee_unit * self.trade_fee
-                units_sell = math.floor((before_fee_unit - expected_fee) * (10**self.min_trade_cur_decimal))/(10**self.min_trade_cur_decimal)
+                expected_fee = math.ceil(before_fee_unit * self.trade_fee)
+                units_ask = math.floor((before_fee_unit - expected_fee) * (1 / self.min_trade_cur_decimal)) * self.\
+                    min_trade_cur_decimal
 
             else:
-                units_sell = round(float(units), self.min_trade_cur_decimal)
+                units_ask = math.floor(float(units) * (1 / self.min_trade_cur_decimal)) * self.min_trade_cur_decimal
 
             rg_params = {
                 "currency": self.currency,
-                "units": units_sell
+                "units": units_ask
             }
 
             response_sell = self.xcoinApiCall("/trade/market_sell", rg_params)
@@ -295,7 +296,7 @@ class Trader(XCoinAPI):
 
             self.update_wallet(report=False)
 
-            return units_sell
+            return units_ask
 
         def record_orderbook(self, report=True):
 
